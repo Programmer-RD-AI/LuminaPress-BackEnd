@@ -1,0 +1,22 @@
+{
+  "name": "luminapress-backend",
+  "version": "1.0.0",
+  "description": "The backend infrastructure for LuminaPress, built with ExpressJS and hosted on Azure. This repository handles user authentication, personalized news feed algorithms, and integration with AI and blockchain-based fact-checking systems.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "devStart": "nodemon node index.js",
+    "build": "echo \"Build Complete\"",
+    "test": "echo \"Error: no test specified\""
+  },
+  "directories": {
+    "serve": "dist"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "type": "module"
+}

@@ -1,0 +1,38 @@
+name: Node.js CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14' # Specify the Node.js version you are using
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+      # You can use 'echo "Error: no test specified"' if no test is set up
+      # To implement real tests, you would need to update the test script in your package.json
+
+    - name: Build
+      run: npm run build
+
+    # Optional: Deploy to Azure or any other service
+    # - name: Deploy
+    #   run: ./deploy.sh
