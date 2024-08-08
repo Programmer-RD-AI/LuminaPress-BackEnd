@@ -1,12 +1,22 @@
-const express = require('express');
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import bodyParser from "body-parser";
+
 const app = express();
-const port = 3000;
+const PORT = 3000;
 
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
+app.use(cors({ origin: "*" }));
+dotenv.config();
+app.use(bodyParser.json());
+
+app.use((err, _, res, __) => {
+  console.error(err.stack);
+  res.status(500).send("Internal Server Error");
 });
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+const server = app.listen(PORT, () => {
+  const host = server.address().address;
+  const port = server.address().port;
+  console.log(`App listening at http://${host}:${port}`);
 });
-
