@@ -4,6 +4,6 @@ export const recommendArticles = async (viewedTitles, currentTitles) => {
     .filter((title) => !viewedTitles.includes(title))
     .map((title, idx) => ({
       article: title,
-      score: Math.random() * (10 - idx),
-    }));
-};
+      score: Math.random() * (10 - idx)
+    }))
+}

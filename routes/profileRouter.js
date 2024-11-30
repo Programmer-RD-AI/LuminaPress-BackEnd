@@ -1,18 +1,18 @@
-import { Router } from "express";
+import { Router } from 'express'
 import {
   validateUserIdQuery,
-  validateUserIdBody,
-} from "../middlewares/profileMiddleware.js";
+  validateUserIdBody
+} from '../middlewares/profileMiddleware.js'
 import {
   getUserProfileHandler,
-  toggleUserPrivacyHandler,
-} from "../handlers/profileHandlers.js";
+  toggleUserPrivacyHandler
+} from '../handlers/profileHandlers.js'
 
-const profileRouter = Router();
+const profileRouter = Router()
 // GET: Fetch user profile and associated comments
-profileRouter.get("/", validateUserIdQuery, getUserProfileHandler);
+profileRouter.get('/', validateUserIdQuery, getUserProfileHandler)
 
 // POST: Toggle user privacy status
-profileRouter.post("/", validateUserIdBody, toggleUserPrivacyHandler);
+profileRouter.post('/', validateUserIdBody, toggleUserPrivacyHandler)
 
-export default profileRouter;
+export default profileRouter

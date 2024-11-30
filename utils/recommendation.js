@@ -1,43 +1,43 @@
-import axios from "axios";
+import axios from 'axios'
 
 // Hugging Face API key and model endpoint
-const HF_API_KEY = "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"; // Replace with your Hugging Face API key
+const HF_API_KEY = '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' // Replace with your Hugging Face API key
 const modelUrl =
-  "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2";
+  'https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2'
 
 // Function to fetch similarity scores from the Hugging Face API
-async function getEmbeddings(sourceSentence, sentences) {
+async function getEmbeddings (sourceSentence, sentences) {
   try {
     const response = await axios.post(
       modelUrl,
       {
         inputs: {
           source_sentence: sourceSentence,
-          sentences: sentences,
-        },
+          sentences
+        }
       },
       {
         headers: {
-          Authorization: `Bearer ${HF_API_KEY}`,
-        },
+          Authorization: `Bearer ${HF_API_KEY}`
+        }
       }
-    );
-    return response.data; // API returns an array of similarity scores
+    )
+    return response.data // API returns an array of similarity scores
   } catch (error) {
     console.error(
-      "Error while fetching embeddings from Hugging Face API:",
+      'Error while fetching embeddings from Hugging Face API:',
       error.response?.data || error.message
-    );
-    throw new Error("Failed to fetch embeddings");
+    )
+    throw new Error('Failed to fetch embeddings')
   }
 }
 
 // Function to recommend articles based on similarity scores
-async function recommendArticles(previousArticles, currentArticles) {
-  const previousArticlesToUse = previousArticles.slice(0, 100); // Max 100 articles
-  const currentArticlesToUse = currentArticles.slice(0, 20); // Max 20 articles
+async function recommendArticles (previousArticles, currentArticles) {
+  const previousArticlesToUse = previousArticles.slice(0, 100) // Max 100 articles
+  const currentArticlesToUse = currentArticles.slice(0, 20) // Max 20 articles
 
-  const recommendedArticles = [];
+  const recommendedArticles = []
 
   // Loop through current articles to calculate similarity scores
   for (const currentArticle of currentArticlesToUse) {
@@ -46,34 +46,34 @@ async function recommendArticles(previousArticles, currentArticles) {
       const similarities = await getEmbeddings(
         currentArticle,
         previousArticlesToUse
-      );
+      )
 
       // Calculate the average similarity score for the current article
-      const totalScore = similarities.reduce((acc, sim) => acc + sim, 0);
+      const totalScore = similarities.reduce((acc, sim) => acc + sim, 0)
       const averageScore =
-        similarities.length > 0 ? totalScore / similarities.length : 0;
+        similarities.length > 0 ? totalScore / similarities.length : 0
 
       // Add to recommendations list
       recommendedArticles.push({
         article: currentArticle,
-        score: averageScore,
-      });
+        score: averageScore
+      })
     } catch (error) {
       console.error(
         `Error processing article "${currentArticle}":`,
         error.message
-      );
+      )
       recommendedArticles.push({
         article: currentArticle,
-        score: 0, // Default score in case of error
-      });
+        score: 0 // Default score in case of error
+      })
     }
   }
 
   // Sort recommended articles by similarity score in descending order
-  recommendedArticles.sort((a, b) => b.score - a.score);
+  recommendedArticles.sort((a, b) => b.score - a.score)
 
-  return recommendedArticles;
+  return recommendedArticles
 }
 
 // // Example usage
@@ -100,4 +100,4 @@ async function recommendArticles(previousArticles, currentArticles) {
 //   }
 // })();
 
-export default recommendArticles;
+export default recommendArticles
