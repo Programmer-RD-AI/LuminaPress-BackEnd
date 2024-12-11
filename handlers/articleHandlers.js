@@ -11,8 +11,8 @@ export const fetchAndUpdateArticle = async (req, res, next) => {
   try {
     // Fetch article by articleId, ensuring it's not hidden
     let { resources: article } = await azureCosmosSQLArticles.query(
-      `SELECT * FROM c WHERE c.id = @articleId AND (c.isHidden = false OR c.isHidden = undefined)`,
-      [{ name: "@articleId", value: articleId }]
+      "SELECT * FROM c WHERE c.id = @articleId AND (c.isHidden = false OR c.isHidden = undefined)",
+      [{ name: "@articleId", value: articleId }],
     );
     console.log(article);
     article = article[0]; // Get the first (and only) article if found
@@ -24,8 +24,8 @@ export const fetchAndUpdateArticle = async (req, res, next) => {
     if (userId) {
       // Fetch user by userId
       let { resources: user } = await azureCosmosSQLUsers.query(
-        `SELECT * FROM c WHERE c.id = @userId`,
-        [{ name: "@userId", value: userId }]
+        "SELECT * FROM c WHERE c.id = @userId",
+        [{ name: "@userId", value: userId }],
       );
 
       user = user[0]; // Get the first (and only) user if found
@@ -59,30 +59,31 @@ export const fetchAndUpdateArticle = async (req, res, next) => {
 export const fetchArticles = async (req, res, next) => {
   const { type, userId, tag } = req.query;
   const currentDateTime = DateTime.now();
-  let query = `SELECT * FROM c WHERE (c.isHidden = false OR c.isHidden = undefined)`;
-  let parameters = [];
+  let query =
+    "SELECT * FROM c WHERE (c.isHidden = false OR c.isHidden = undefined)";
+  const parameters = [];
 
   try {
     // Build query based on type
     if (type === "new") {
       const last48HoursDate = currentDateTime.minus({ hours: 1000 }).toISO();
-      query += ` ORDER BY c.publishedAt DESC`;
+      query += " ORDER BY c.publishedAt DESC";
     } else if (type === "popular") {
-      query += ` ORDER BY c.views DESC`;
+      query += " ORDER BY c.views DESC";
     } else if (type === "trending") {
-      query += ` ORDER BY c.view_history DESC`;
+      query += " ORDER BY c.view_history DESC";
     }
 
     // Add tag filtering
     if (tag) {
-      query += ` AND ARRAY_CONTAINS(c.tags, @tag)`;
+      query += " AND ARRAY_CONTAINS(c.tags, @tag)";
       parameters.push({ name: "@tag", value: tag });
     }
 
     // Fetch articles
     const { resources: articles } = await azureCosmosSQLArticles.query(
       query,
-      parameters
+      parameters,
     );
 
     if (userId) {
@@ -97,13 +98,13 @@ export const fetchArticles = async (req, res, next) => {
 
 const getRecommendations = async (userId, articles) => {
   const userQuery = {
-    query: `SELECT * FROM c WHERE c.id = @userId`,
+    query: "SELECT * FROM c WHERE c.id = @userId",
     parameters: [{ name: "@userId", value: userId }],
   };
 
   const { resources: users } = await azureCosmosSQLUsers.query(
     userQuery.query,
-    userQuery.parameters
+    userQuery.parameters,
   );
 
   if (users.length === 0) return articles;
@@ -113,13 +114,14 @@ const getRecommendations = async (userId, articles) => {
 
   if (viewedArticleIds.length > 0) {
     const viewedQuery = {
-      query: `SELECT * FROM c WHERE ARRAY_CONTAINS(@viewedIds, c.id) AND (c.isHidden = false OR c.isHidden = undefined)`,
+      query:
+        "SELECT * FROM c WHERE ARRAY_CONTAINS(@viewedIds, c.id) AND (c.isHidden = false OR c.isHidden = undefined)",
       parameters: [{ name: "@viewedIds", value: viewedArticleIds }],
     };
 
     const { resources: viewedArticles } = await azureCosmosSQLUsers.query(
       viewedQuery.query,
-      viewedQuery.parameters
+      viewedQuery.parameters,
     );
 
     const viewedTitles = viewedArticles.map((a) => a.title);
@@ -127,7 +129,7 @@ const getRecommendations = async (userId, articles) => {
 
     const recommendedArticles = await recommendArticles(
       viewedTitles,
-      currentTitles
+      currentTitles,
     );
 
     return recommendedArticles
@@ -161,7 +163,7 @@ export const searchArticlesHandler = async (req, res) => {
 
     const { resources: articles } = await azureCosmosSQLArticles.query(
       querySpec.query,
-      querySpec.parameters
+      querySpec.parameters,
     );
     console.log(articles);
 
