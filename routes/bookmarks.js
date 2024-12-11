@@ -55,7 +55,7 @@ bookMarkRouter.delete("/", async (req, res, next) => {
 
     // Remove the article from bookmarks
     user.bookmarks = user.bookmarks.filter(
-      (bookmark) => bookmark !== articleId
+      (bookmark) => bookmark !== articleId,
     );
 
     // Update the user in the database

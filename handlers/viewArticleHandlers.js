@@ -12,13 +12,13 @@ export const viewArticleHandler = async (req, res) => {
   try {
     // Fetch the article
     const articleQuerySpec = {
-      query: `SELECT * FROM c WHERE c.id = @articleId`,
+      query: "SELECT * FROM c WHERE c.id = @articleId",
       parameters: [{ name: "@articleId", value: articleId }],
     };
 
     let { resources: article } = await azureCosmosSQLArticles.query(
       articleQuerySpec.query,
-      articleQuerySpec.parameters
+      articleQuerySpec.parameters,
     );
 
     article = article[0];
@@ -33,13 +33,13 @@ export const viewArticleHandler = async (req, res) => {
     // If userId is provided, update user's viewed articles
     if (userId) {
       const userQuerySpec = {
-        query: `SELECT * FROM c WHERE c.id = @userId`,
+        query: "SELECT * FROM c WHERE c.id = @userId",
         parameters: [{ name: "@userId", value: userId }],
       };
 
       let { resources: user } = await azureCosmosSQLUsers.query(
         userQuerySpec.query,
-        userQuerySpec.parameters
+        userQuerySpec.parameters,
       );
 
       user = user[0];
@@ -64,7 +64,7 @@ export const viewArticleHandler = async (req, res) => {
     await azureCosmosSQLArticles.update(articleId, article);
     res.status(200).json({
       message: "Article viewed and data updated successfully",
-      articleId: articleId,
+      articleId,
       views: article.views,
       view_history: article.view_history,
     });

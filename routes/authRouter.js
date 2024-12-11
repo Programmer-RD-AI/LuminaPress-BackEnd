@@ -19,7 +19,7 @@ authRouter.post(
   // validateRegister,
   // checkEmailExists(doesEmailExist),
   // hashPassword,
-  signUpHandler
+  signUpHandler,
 );
 
 // Login route

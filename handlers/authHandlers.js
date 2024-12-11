@@ -40,7 +40,7 @@ export const loginHandler = async (req, res) => {
 
   const { resources: users } = await azureCosmosSQLUsers.query(
     "SELECT * FROM c WHERE c.email = @email",
-    [{ name: "@email", value: email }]
+    [{ name: "@email", value: email }],
   );
 
   if (users.length === 0) {
