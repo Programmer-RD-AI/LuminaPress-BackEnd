@@ -4,18 +4,18 @@ import {
   azureCosmosSQLUsers,
 } from "../config/AzureCosmosConfig.js";
 import { MAX_ARTICLES, MAX_RECOMMENDATIONS } from "../config/generalConfig.js";
+import { recommendArticles } from "../utils/recommendation.js";
 export const fetchAndUpdateArticle = async (req, res, next) => {
   const { articleId, userId } = req.query;
-
+  console.log(articleId, userId);
   try {
-    // Fetch article by articleId
+    // Fetch article by articleId, ensuring it's not hidden
     let { resources: article } = await azureCosmosSQLArticles.query(
-      `SELECT * FROM c WHERE c.id = @articleId`,
+      `SELECT * FROM c WHERE c.id = @articleId AND (c.isHidden = false OR c.isHidden = undefined)`,
       [{ name: "@articleId", value: articleId }]
     );
-
+    console.log(article);
     article = article[0]; // Get the first (and only) article if found
-
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
@@ -40,15 +40,15 @@ export const fetchAndUpdateArticle = async (req, res, next) => {
             user.viewedArticles.shift(); // Remove the oldest viewed article
           }
 
-          await azureCosmosSQLUsers.update(userId, user);
+          await azureCosmosSQLUsers.update(user.id, user, 1);
         }
       }
 
       // Update the article's view count and view history
       article.views += 1;
       article.view_history.push(DateTime.now().toISO()); // Add the current timestamp to the history
-
-      await azureCosmosSQLArticles.update(articleId, article);
+      console.log(article.id);
+      await azureCosmosSQLArticles.update(article.id, article);
     }
 
     res.status(200).json(article);
@@ -58,17 +58,15 @@ export const fetchAndUpdateArticle = async (req, res, next) => {
 };
 export const fetchArticles = async (req, res, next) => {
   const { type, userId, tag } = req.query;
-  console.log(type, userId, tag);
   const currentDateTime = DateTime.now();
-  let query = `SELECT * FROM c`;
+  let query = `SELECT * FROM c WHERE (c.isHidden = false OR c.isHidden = undefined)`;
   let parameters = [];
 
   try {
     // Build query based on type
     if (type === "new") {
       const last48HoursDate = currentDateTime.minus({ hours: 1000 }).toISO();
-      // query += ` WHERE c.publishedAt >= @date ORDER BY c.publishedAt DESC`;
-      // parameters.push({ name: "@date", value: last48HoursDate });
+      query += ` ORDER BY c.publishedAt DESC`;
     } else if (type === "popular") {
       query += ` ORDER BY c.views DESC`;
     } else if (type === "trending") {
@@ -77,7 +75,7 @@ export const fetchArticles = async (req, res, next) => {
 
     // Add tag filtering
     if (tag) {
-      query += (type ? " AND" : " WHERE") + ` ARRAY_CONTAINS(c.tags, @tag)`;
+      query += ` AND ARRAY_CONTAINS(c.tags, @tag)`;
       parameters.push({ name: "@tag", value: tag });
     }
 
@@ -86,12 +84,11 @@ export const fetchArticles = async (req, res, next) => {
       query,
       parameters
     );
-    console.log(articles);
+
     if (userId) {
       const recommendations = await getRecommendations(userId, articles);
       return res.status(200).json({ articles: recommendations });
     }
-
     res.status(200).json({ articles });
   } catch (error) {
     next(error);
@@ -116,7 +113,7 @@ const getRecommendations = async (userId, articles) => {
 
   if (viewedArticleIds.length > 0) {
     const viewedQuery = {
-      query: `SELECT * FROM c WHERE ARRAY_CONTAINS(@viewedIds, c.id)`,
+      query: `SELECT * FROM c WHERE ARRAY_CONTAINS(@viewedIds, c.id) AND (c.isHidden = false OR c.isHidden = undefined)`,
       parameters: [{ name: "@viewedIds", value: viewedArticleIds }],
     };
 
@@ -153,6 +150,7 @@ export const searchArticlesHandler = async (req, res) => {
   try {
     const querySpec = {
       query: `SELECT * FROM c WHERE 
+                (c.isHidden = false OR c.isHidden = undefined) AND 
                 (@query = "" OR CONTAINS(c.title, @query) OR CONTAINS(c.description, @query)) 
                 AND (@tags = [] OR ARRAY_CONTAINS(c.tags, @tags))`,
       parameters: [
@@ -165,7 +163,9 @@ export const searchArticlesHandler = async (req, res) => {
       querySpec.query,
       querySpec.parameters
     );
-    res.status(200).json(articles);
+    console.log(articles);
+
+    res.status(200).json({ articles });
   } catch (error) {
     console.error("Error searching articles:", error);
     res.status(500).json({ message: "Error searching articles" });

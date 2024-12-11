@@ -12,8 +12,8 @@ export const getUserProfileHandler = async (req, res) => {
   try {
     // Fetch user profile
     const { resources: userProfile } = await azureCosmosSQLUsers.query(
-      (query = "SELECT * FROM c WHERE c.id = @userId"),
-      (parameters = [{ name: "@userId", value: userIdAccessing }])
+      "SELECT * FROM c WHERE c.id = @userId",
+      [{ name: "@userId", value: userIdAccessing }]
     );
 
     if (userProfile.length === 0) {
@@ -27,9 +27,8 @@ export const getUserProfileHandler = async (req, res) => {
 
     // Fetch articles with comments from this user
     const { resources: articles } = await azureCosmosSQLArticles.query(
-      (query =
-        "SELECT * FROM c WHERE ARRAY_CONTAINS(c.comments, { userId: @userId }, true)"),
-      (parameters = [{ name: "@userId", value: userIdAccessing }])
+      "SELECT * FROM c WHERE ARRAY_CONTAINS(c.comments, { userId: @userId }, true)",
+      [{ name: "@userId", value: userIdAccessing }]
     );
 
     // Extract and structure user comments
@@ -67,12 +66,12 @@ export const getUserProfileHandler = async (req, res) => {
  */
 export const toggleUserPrivacyHandler = async (req, res) => {
   const { userId } = req.body;
-
+  console.log(userId);
   try {
     // Fetch user profile
     let { resources: userProfile } = await azureCosmosSQLUsers.query(
-      (query = "SELECT * FROM c WHERE c.id = @userId"),
-      (parameters = [{ name: "@userId", value: userId }])
+      "SELECT * FROM c WHERE c.id = @userId",
+      [{ name: "@userId", value: userId }]
     );
 
     if (userProfile.length === 0) {
@@ -84,7 +83,7 @@ export const toggleUserPrivacyHandler = async (req, res) => {
     user.private = !user.private;
 
     // Update the database
-    await azureCosmosSQLUsers.update(userId, user);
+    await azureCosmosSQLUsers.update(userId, user, 1);
 
     res.status(200).json(user);
   } catch (error) {

@@ -61,7 +61,7 @@ export const viewArticleHandler = async (req, res) => {
     }
 
     // Update the article in the database
-    await azureCosmosSQLArticles.update(articleId, articleId, article);
+    await azureCosmosSQLArticles.update(articleId, article);
     res.status(200).json({
       message: "Article viewed and data updated successfully",
       articleId: articleId,

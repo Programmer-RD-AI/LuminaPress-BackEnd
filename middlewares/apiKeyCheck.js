@@ -3,8 +3,7 @@ import { azureCosmosSQLAPI } from "../config/AzureCosmosConfig.js";
 export const apiKeyCheck = async (req, res, next) => {
   try {
     const apiKey = req.headers["x-api-key"];
-    console.log(apiKey);
-    console.log(req.headers);
+
     if (!apiKey) {
       return res.status(400).json({ error: "API key is missing" });
     }
