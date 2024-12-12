@@ -39,7 +39,7 @@ class AdvancedArticleRecommender {
     const baseScore = intersection.length / union.size;
     const lengthBonus = Math.min(
       1,
-      (intersection.length / Math.min(tokens1.size, tokens2.size)) * 1.5
+      (intersection.length / Math.min(tokens1.size, tokens2.size)) * 1.5,
     );
 
     return baseScore * lengthBonus;
@@ -57,7 +57,7 @@ class AdvancedArticleRecommender {
     tokens.forEach((token) => {
       frequencyDistribution.set(
         token,
-        (frequencyDistribution.get(token) || 0) + 1
+        (frequencyDistribution.get(token) || 0) + 1,
       );
     });
 
@@ -82,7 +82,7 @@ class AdvancedArticleRecommender {
         article: prevArticle,
         similarity: this.calculateSemanticSimilarity(
           currentArticle,
-          prevArticle
+          prevArticle,
         ),
       }));
 
