@@ -33,8 +33,8 @@ export class AzureCosmosSQL {
    * @param {string} id - The ID of the item to read.
    * @returns {Promise<Object>} - The read item.
    */
-  async read(id) {
-    const { resource } = await this.getItem(id).read();
+  async read(id, no = 2) {
+    const { resource } = await this.getItem(id, no).read();
     return resource;
   }
 
@@ -44,8 +44,8 @@ export class AzureCosmosSQL {
    * @param {Object} item - The updated item data.
    * @returns {Promise<Object>} - The updated item.
    */
-  async update(id, item) {
-    const { resource } = await this.getItem(id).replace(item);
+  async update(id, item, no = 2) {
+    const { resource } = await this.getItem(id, no).replace(item);
     return resource;
   }
 
@@ -63,7 +63,11 @@ export class AzureCosmosSQL {
    * @param {string} id - The ID of the item to retrieve.
    * @returns {Object} - The item reference.
    */
-  getItem(id) {
-    return this.container.item(id, undefined); // Partition key is optional here
+  getItem(id, no) {
+    if (no === 1) {
+      return this.container.item(id);
+    } else if (no === 2) {
+      return this.container.item(id, id);
+    }
   }
 }

@@ -9,6 +9,8 @@ import profileRouter from "./routes/profileRouter.js";
 import likeRouter from "./routes/likeRouter.js";
 import viewRouter from "./routes/viewRouter.js";
 import apiKeyCheck from "./middlewares/apiKeyCheck.js";
+import bookMarkRouter from "./routes/bookmarks.js";
+import articleHideRouter from "./routes/articleHideRouter.js";
 
 const app = express();
 const PORT = 3000;
@@ -21,8 +23,10 @@ app.use("/auth", authRouter); // add the auth router
 app.use("/articles", articlesRouter);
 app.use("/articles/likes", likeRouter);
 app.use("/articles/comments", commentRouter);
+app.use("/articles/hide", articleHideRouter);
 app.use("/articles/views", viewRouter);
 app.use("/profile", profileRouter);
+app.use("/bookmarks", bookMarkRouter);
 app.use((err, _, res, __) => {
   console.error(err.stack);
   res.status(500).send("Internal Server Error");

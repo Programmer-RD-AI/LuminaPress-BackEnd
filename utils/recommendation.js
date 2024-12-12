@@ -1,103 +1,125 @@
-import axios from "axios";
+import natural from "natural";
+import stopword from "stopword";
 
-// Hugging Face API key and model endpoint
-const HF_API_KEY = "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"; // Replace with your Hugging Face API key
-const modelUrl =
-  "https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2";
-
-// Function to fetch similarity scores from the Hugging Face API
-async function getEmbeddings(sourceSentence, sentences) {
-  try {
-    const response = await axios.post(
-      modelUrl,
-      {
-        inputs: {
-          source_sentence: sourceSentence,
-          sentences: sentences,
-        },
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${HF_API_KEY}`,
-        },
-      }
-    );
-    return response.data; // API returns an array of similarity scores
-  } catch (error) {
-    console.error(
-      "Error while fetching embeddings from Hugging Face API:",
-      error.response?.data || error.message
-    );
-    throw new Error("Failed to fetch embeddings");
+class AdvancedArticleRecommender {
+  constructor() {
+    this.tokenizer = new natural.WordTokenizer();
+    this.stemmer = natural.PorterStemmer;
   }
-}
 
-// Function to recommend articles based on similarity scores
-async function recommendArticles(previousArticles, currentArticles) {
-  const previousArticlesToUse = previousArticles.slice(0, 100); // Max 100 articles
-  const currentArticlesToUse = currentArticles.slice(0, 20); // Max 20 articles
+  /**
+   * Preprocess text by tokenizing, removing stopwords, and stemming
+   * @param {string} text - Input text to preprocess
+   * @returns {string[]} Processed tokens
+   */
+  preprocessText(text) {
+    // Tokenize and convert to lowercase
+    const tokens = this.tokenizer.tokenize(text.toLowerCase()) || [];
 
-  const recommendedArticles = [];
+    // Remove stopwords and apply stemming
+    const cleanedTokens = stopword.removeStopwords(tokens);
+    return cleanedTokens.map((token) => this.stemmer.stem(token));
+  }
 
-  // Loop through current articles to calculate similarity scores
-  for (const currentArticle of currentArticlesToUse) {
-    try {
-      // Fetch similarity scores
-      const similarities = await getEmbeddings(
-        currentArticle,
-        previousArticlesToUse
+  /**
+   * Calculate semantic similarity between two texts
+   * @param {string} text1 - First text
+   * @param {string} text2 - Second text
+   * @returns {number} Similarity score
+   */
+  calculateSemanticSimilarity(text1, text2) {
+    const tokens1 = new Set(this.preprocessText(text1));
+    const tokens2 = new Set(this.preprocessText(text2));
+
+    // Jaccard similarity with advanced calculation
+    const intersection = [...tokens1].filter((token) => tokens2.has(token));
+    const union = new Set([...tokens1, ...tokens2]);
+
+    // Weighted similarity with length bonus
+    const baseScore = intersection.length / union.size;
+    const lengthBonus = Math.min(
+      1,
+      (intersection.length / Math.min(tokens1.size, tokens2.size)) * 1.5
+    );
+
+    return baseScore * lengthBonus;
+  }
+
+  /**
+   * Extract key topics from a text
+   * @param {string} text - Input text
+   * @returns {string[]} Top 3 key topics
+   */
+  extractKeyTopics(text) {
+    const tokens = this.preprocessText(text);
+    const frequencyDistribution = new Map();
+
+    tokens.forEach((token) => {
+      frequencyDistribution.set(
+        token,
+        (frequencyDistribution.get(token) || 0) + 1
       );
+    });
 
-      // Calculate the average similarity score for the current article
-      const totalScore = similarities.reduce((acc, sim) => acc + sim, 0);
-      const averageScore =
-        similarities.length > 0 ? totalScore / similarities.length : 0;
+    // Top 3 key topics by frequency
+    return Array.from(frequencyDistribution.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map((entry) => entry[0]);
+  }
 
-      // Add to recommendations list
-      recommendedArticles.push({
+  /**
+   * Recommend articles based on semantic similarity
+   * @param {string[]} previousArticles - List of previous articles
+   * @param {string[]} currentArticles - List of current articles to recommend
+   * @returns {Object[]} Sorted recommendations with similarity scores
+   */
+  recommendArticles(previousArticles, currentArticles) {
+    const recommendations = [];
+
+    for (const currentArticle of currentArticles) {
+      const similarities = previousArticles.map((prevArticle) => ({
+        article: prevArticle,
+        similarity: this.calculateSemanticSimilarity(
+          currentArticle,
+          prevArticle
+        ),
+      }));
+
+      // Sort similarities in descending order
+      similarities.sort((a, b) => b.similarity - a.similarity);
+
+      // Top match
+      const topMatch = similarities[0] || { article: null, similarity: 0 };
+      const keyTopics = this.extractKeyTopics(currentArticle);
+
+      recommendations.push({
         article: currentArticle,
-        score: averageScore,
-      });
-    } catch (error) {
-      console.error(
-        `Error processing article "${currentArticle}":`,
-        error.message
-      );
-      recommendedArticles.push({
-        article: currentArticle,
-        score: 0, // Default score in case of error
+        score: topMatch.similarity,
+        similarTo: topMatch.article,
+        matchReasons: keyTopics.map((topic) => `Shares topic: ${topic}`),
       });
     }
+
+    // Sort recommendations by score
+    return recommendations.sort((a, b) => b.score - a.score);
   }
-
-  // Sort recommended articles by similarity score in descending order
-  recommendedArticles.sort((a, b) => b.score - a.score);
-
-  return recommendedArticles;
 }
 
-// // Example usage
-// (async () => {
-//   const previousArticles = [
-//     "Sample Article Title 1",
-//     "Sample Article Title 2",
-//     "Sample Article Title 3",
-//   ];
-//   const currentArticles = [
-//     "Sample Article Title 8",
-//     "Sample Article Title 9",
-//     "Sample Article Title 10",
-//   ];
+// Singleton instance for easy use
+export const articleRecommender = new AdvancedArticleRecommender();
 
-//   try {
-//     const recommendations = await recommendArticles(
-//       previousArticles,
-//       currentArticles
-//     );
-//     console.log("Recommended Articles:", recommendations);
-//   } catch (error) {
-//     console.error("Error generating recommendations:", error.message);
-//   }
-// })();
+/**
+ * Convenience function for recommending articles
+ * @param {string[]} previousArticles - List of previous articles
+ * @param {string[]} currentArticles - List of current articles to recommend
+ * @returns {Object[]} Sorted recommendations
+ */
+export function recommendArticles(previousArticles, currentArticles) {
+  const responses = articleRecommender
+    .recommendArticles(previousArticles, currentArticles)
+    .reverse();
+  return responses;
+}
 
 export default recommendArticles;

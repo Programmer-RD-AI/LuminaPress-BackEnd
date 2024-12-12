@@ -11,14 +11,14 @@ import {
   loginHandler,
   signUpHandler,
 } from "../handlers/authHandlers.js";
-import {doesEmailExist} from "../utils/doesEmailExist.js";
+import { doesEmailExist } from "../utils/doesEmailExist.js";
 const authRouter = Router();
 
 authRouter.post(
   "/register",
-  validateRegister,
-  checkEmailExists(doesEmailExist),
-  hashPassword,
+  // validateRegister,
+  // checkEmailExists(doesEmailExist),
+  // hashPassword,
   signUpHandler
 );
 
