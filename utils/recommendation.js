@@ -119,7 +119,6 @@ export function recommendArticles(previousArticles, currentArticles) {
   const responses = articleRecommender
     .recommendArticles(previousArticles, currentArticles)
     .reverse();
-  console.log(responses);
   return responses;
 }
 

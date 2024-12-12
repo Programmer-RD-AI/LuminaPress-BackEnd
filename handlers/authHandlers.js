@@ -21,7 +21,6 @@ export const signUpHandler = async (req, res) => {
       bookmarks: [],
       createdAt: new Date().toISOString(),
     };
-    console.log(newUser);
     const { resource: createdUser } = await azureCosmosSQLUsers.create(newUser);
     res.status(201).json({
       message: "User registered successfully",
@@ -36,7 +35,6 @@ export const signUpHandler = async (req, res) => {
 };
 export const loginHandler = async (req, res) => {
   const { email, password } = req.body;
-  console.log(email, password);
 
   const { resources: users } = await azureCosmosSQLUsers.query(
     "SELECT * FROM c WHERE c.email = @email",
@@ -48,13 +46,11 @@ export const loginHandler = async (req, res) => {
   }
 
   const user = users[0];
-  console.log(user);
   const isPasswordValid = await bcrypt.compare(password, user.password);
 
   // if (!isPasswordValid) {
   //   return res.status(400).json({ message: "Invalid email or password" });
   // }
-  console.log(user.id);
   res.status(200).json({
     ok: true,
     message: "Login successful",

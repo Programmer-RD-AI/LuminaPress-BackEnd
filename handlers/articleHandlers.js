@@ -7,14 +7,12 @@ import { MAX_ARTICLES, MAX_RECOMMENDATIONS } from "../config/generalConfig.js";
 import { recommendArticles } from "../utils/recommendation.js";
 export const fetchAndUpdateArticle = async (req, res, next) => {
   const { articleId, userId } = req.query;
-  console.log(articleId, userId);
   try {
     // Fetch article by articleId, ensuring it's not hidden
     let { resources: article } = await azureCosmosSQLArticles.query(
       `SELECT * FROM c WHERE c.id = @articleId AND (c.isHidden = false OR c.isHidden = undefined)`,
       [{ name: "@articleId", value: articleId }]
     );
-    console.log(article);
     article = article[0]; // Get the first (and only) article if found
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
@@ -47,7 +45,6 @@ export const fetchAndUpdateArticle = async (req, res, next) => {
       // Update the article's view count and view history
       article.views += 1;
       article.view_history.push(DateTime.now().toISO()); // Add the current timestamp to the history
-      console.log(article.id);
       await azureCosmosSQLArticles.update(article.id, article);
     }
 
@@ -163,7 +160,6 @@ export const searchArticlesHandler = async (req, res) => {
       querySpec.query,
       querySpec.parameters
     );
-    console.log(articles);
 
     res.status(200).json({ articles });
   } catch (error) {

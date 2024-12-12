@@ -66,7 +66,6 @@ export const getUserProfileHandler = async (req, res) => {
  */
 export const toggleUserPrivacyHandler = async (req, res) => {
   const { userId } = req.body;
-  console.log(userId);
   try {
     // Fetch user profile
     let { resources: userProfile } = await azureCosmosSQLUsers.query(

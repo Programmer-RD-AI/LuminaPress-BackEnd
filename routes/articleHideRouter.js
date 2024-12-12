@@ -7,8 +7,6 @@ const articleHideRouter = express.Router();
 articleHideRouter.post("/", async (req, res, next) => {
   try {
     const { articleId } = req.body;
-    console.log(articleId);
-
     if (!articleId) {
       return res.status(400).json({
         error: "Article ID is required",
@@ -37,7 +35,6 @@ articleHideRouter.post("/", async (req, res, next) => {
 articleHideRouter.put("/", async (req, res, next) => {
   try {
     const { articleId } = req.body;
-    console.log(articleId);
     if (!articleId) {
       return res.status(400).json({
         error: "Article ID is required",
